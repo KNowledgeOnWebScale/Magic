@@ -17,6 +17,13 @@ To search for possible candidates matches, magic uses either:
 - DBPedia Spotlight when DBPedia annotaions are requested (https://github.com/dbpedia-spotlight/dbpedia-spotlight)
 - The Wikidata api (The awena.py script, which is an adapted version of https://github.com/sedthh/awena-wikidata-crawler)
 
+## Demo
+
+To run demo application, pip install streamlit pachage and execute:
+```
+streamlit run StreamlitApp.py
+```
+
 ## How to cite:
 Comming soon, Magic is being used at the ISWC2021 Tabular Data to Knowledge Graph Matching" competition.<br>
 A paper describing the full system will be made available.
