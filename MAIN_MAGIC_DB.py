@@ -21,7 +21,7 @@ class DBMagic(Magic):
 
     def search_entity_api(self, entity):
         try:
-            data = {'confidence': 0.0, 'text': entity}
+            data = {'confidence': 0.1, 'text': entity}
             headers = {
                 'Accept': 'application/json',
             }
@@ -81,13 +81,18 @@ if __name__ == '__main__':
     connector = HDTConnector()
     #cpa_targets = pd.read_csv("HardTablesR3_CPA_WD_Round3_Targets.csv", header=None)
     cta_targets = pd.read_csv("CTA_DBP_Round1_Targets.csv", header=None)
+    done = pd.read_csv("DBPediaR1_DB_cta.txt", header=None)
+    done = set(done[0].values)
     for file in tqdm(glob.glob('/users/bsteenwi/dbpedia_hdt/code/DBPediaR1/*.csv')):
         name = file.split('/')[-1].split('.')[0]
-        # cpa_targets[cpa_targets[0] == name][1].value_counts().idxmax()
-        for main_col in cta_targets[cta_targets[0]==name][1].values:
-            annotator = DBMagic(connector,file,0,None,main_col)#WikiMagic(connector,file,main_col)
-            annotator.annotate()
-            annotator.export_files("DBPediaR1_DB")
+        print(name)
+        if name not in done:
+            # cpa_targets[cpa_targets[0] == name][1].value_counts().idxmax()
+
+            for main_col in cta_targets[cta_targets[0]==name][1].values:
+                annotator = DBMagic(connector,file,0,None,main_col)#WikiMagic(connector,file,main_col)
+                annotator.annotate()
+                annotator.export_files("DBPediaR1_DB")
 
 
 

@@ -4,10 +4,31 @@ import pandas as pd
 import json
 import numpy as np
 import operator
-from tqdm import tqdm
+#from tqdm import tqdm
 global g
 import re
 from functools import lru_cache
+import streamlit as st
+
+class tqdm:
+    def __init__(self, iterable, length=None, title=None):
+        if title:
+            st.write(title)
+        self.prog_bar = st.progress(0)
+        self.iterable = iterable
+        if length:
+            self.length = length
+        else:
+            self.length = len(iterable)
+        self.i = 0
+
+    def __iter__(self):
+        for obj in self.iterable:
+            yield obj
+            self.i += 1
+            current_prog = self.i / self.length
+            self.prog_bar.progress(current_prog)
+
 
 class Magic(object):
     def __init__(self, connector, structured_file, header, index_col, main_col, property_prefix, cta_filter=None, skiplist=[]):
@@ -23,10 +44,11 @@ class Magic(object):
         self.cta_filter=cta_filter
         self.header = header
         self.index_col = index_col
+        self.embeddings = {}
 
     @lru_cache(maxsize=128)
     def generate_embedding(self, data, depth, jobs, filter=None):
-        extractor = InkExtractor(self.connector, verbose=False)
+        extractor = InkExtractor(self.connector, verbose=True)
         X_train, _ = extractor.create_dataset(depth, set(data), set(), self.skiplist, jobs)
         extracted_data = extractor.fit_transform(X_train, counts=False, levels=False, float_rpr=False)
         df_data = pd.DataFrame.sparse.from_spmatrix(extracted_data[0])
@@ -42,8 +64,9 @@ class Magic(object):
 
     def annotate(self):
         df = pd.read_csv(self.file, header=self.header, index_col=self.index_col)
+        print(df)
         data = {}
-        for k, row in df.iterrows():
+        for k, row in tqdm(df.iterrows(), length=len(df), title='Get Candidates'):
             try:
                 data[(row[self.maincol],k)] = self.search_entity_api(re.sub("[\(\[].*?[\)\]]", "", row[self.maincol]))
             except:
@@ -52,14 +75,15 @@ class Magic(object):
         for x in data:
             all_entities.update(set(data[x]))
         if len(all_entities)>0:
-            full_emb = self.generate_embedding(tuple(all_entities),2,30)
+            st.write('Generate embeddings for '+str(len(all_entities))+' candidates')
+
+            full_emb = self.generate_embedding(tuple(all_entities),2,3)
             emb_label = full_emb[[c for c in full_emb.columns if self.property_prefix in c]]
             cols = [c for c in emb_label.columns if c.count("http") < 2 or 'http://www.w3.org/2000/01/rdf-schema#label§' in c]
             emb_label = emb_label[cols]
-            for k, row in df.iterrows():
+            for k, row in tqdm(df.iterrows(), length=len(df), title='Get cell annotations'):
                 if len(data[(row[self.maincol],k)]) > 0:
                     #emb = full_emb#self.generate_embedding(tuple(data),2,min([1,len(data)]))
-
                     #emb_label = emb[[c for c in emb.columns if self.property_prefix in c]]
                     cols = [c for c in emb_label.columns for r in range(len(row)) if
                             row[r] is not np.nan and r != self.maincol and '§' + str(row[r]) in c]
@@ -88,7 +112,7 @@ class Magic(object):
                                         self.cea[(k, r)] = i['o']['value']
                                         break
 
-            for k, row in df.iterrows():
+            for k, row in tqdm(df.iterrows(), length=len(df), title='Get relationships annotations'):
                 for c in self.cpa:
                     try:
                         best_col = max(self.cpa[c].items(), key=operator.itemgetter(1))[0]
@@ -100,20 +124,44 @@ class Magic(object):
                             self.cea[(k, c[1])] = i['o']['value']
                             break
 
-            column_entity = {}
+            self.column_entity = {}
+            all_entities = set()
             for c in self.cea:
-                if c[1] not in column_entity:
-                    column_entity[c[1]] = set()
-                column_entity[c[1]].add(self.cea[c])
+                if c[1] not in self.column_entity:
+                    self.column_entity[c[1]] = set()
+                self.column_entity[c[1]].add(self.cea[c])
+                all_entities.add(self.cea[c])
+            self.skiplist.extend(['http://dbpedia.org/property/wikiPageUsesTemplate','http://dbpedia.org/ontology/wikiPageWikiLink'])
+            print(self.skiplist)
+            self.embeddings = self.generate_embedding(tuple(all_entities), 2, 3, 'http://dbpedia.org/property')
 
-            for col in column_entity:
+
+            for col in tqdm(self.column_entity, length=len(self.column_entity), title='Get column annotations'):
                 try:
-                    self.cta.add((self.name, col, self.generate_embedding(tuple(column_entity[col]), 1, 50, self.cta_filter).sum().idxmax().split('§')[-1]))
+                    self.cta.add((self.name, col, self.generate_embedding(tuple(self.column_entity[col]), 1, 3, self.cta_filter).sum().idxmax().split('§')[-1]))
                 except:
                     None
 
         print(self.name)
         print(self.maincol)
+
+    def augement(self, base_column):
+        df = self.embeddings.loc[self.column_entity[base_column]]
+        dct = {}
+        tf_cols = df.loc[:, (df.sum(axis=0) == len(self.column_entity[base_column]))].columns
+        for x in tf_cols:
+            try:
+                print(x)
+                df2 = df.filter(regex=x + '§')
+                pdf2 = df2.idxmax(1).str.split('§').str[1].to_frame()
+                pdf2.columns = [x]
+                dct[x] = pdf2
+            except:
+                None
+        return dct
+
+
+
 
 
     def _export_cea(self, prefix):

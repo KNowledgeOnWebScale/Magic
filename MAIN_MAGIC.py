@@ -67,10 +67,10 @@ if __name__ == '__main__':
     for file in tqdm(glob.glob('/users/bsteenwi/dbpedia_hdt/code/WikidataR1/*.csv')):
         name = file.split('/')[-1].split('.')[0]
         # cpa_targets[cpa_targets[0] == name][1].value_counts().idxmax()
-        for main_col in cta_targets[cta_targets[0]==name][1].values:
-            annotator = WikiMagic(connector,file,0,None,main_col)#WikiMagic(connector,file,main_col)
-            annotator.annotate()
-            annotator.export_files("WikidataR1")
+        #for main_col in cta_targets[cta_targets[0]==name][1].values:
+        annotator = WikiMagic(connector,file,0,None,0)#WikiMagic(connector,file,main_col)
+        annotator.annotate()
+        annotator.export_files("WikidataR1")
 
 
 
