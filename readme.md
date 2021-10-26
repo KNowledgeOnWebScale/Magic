@@ -19,10 +19,17 @@ To search for possible candidates matches, magic uses either:
 
 ## Demo
 
-To run demo application, pip install streamlit pachage and execute:
+To run demo application, pip install all packages inside the `requirements.txt` file <br>
+You also need the dbpedia-2016-10 hdt files to build the candidates neighbourhood. You can download it either from the HDT website or from https://www.kaggle.com/bsteenwi/dbpedia. 
+<br> Place the hdt and index file in the same folder as the StreamlitApp.py file.
+
+Next, execute the following command inside a terminal window:
+
 ```
 streamlit run StreamlitApp.py
 ```
+
+A video of this demo application is also made available (here)[https://www.youtube.com/watch?v=ZhTKxcTBZNE]
 
 ## How to cite:
 Comming soon, Magic is being used at the ISWC2021 Tabular Data to Knowledge Graph Matching" competition.<br>
