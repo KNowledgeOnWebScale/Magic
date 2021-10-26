@@ -1,0 +1,6 @@
+streamlit
+stqdm
+git+git://github.com/IBCNServices/INK
+rdflib
+rdflib-hdt
+pystardog
