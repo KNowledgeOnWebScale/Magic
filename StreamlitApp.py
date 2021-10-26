@@ -14,7 +14,7 @@ import json
 import requests
 import operator
 
-store = HDTStore("/Users/bramsteenwinckel/Downloads/dbpedia2016-10.hdt")
+store = HDTStore("dbpedia2016-10.hdt")
 g = Graph(store)
 
 skip_list_db = ['http://schema.org/', 'http://www.w3.org/2004/02/skos/core', 'http://www.w3.org/2002/07/owl#sameAs',
