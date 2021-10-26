@@ -29,7 +29,7 @@ Next, execute the following command inside a terminal window:
 streamlit run StreamlitApp.py
 ```
 
-A video of this demo application is also made available (here)[https://www.youtube.com/watch?v=ZhTKxcTBZNE]
+A video of this demo application is also made available [here](https://www.youtube.com/watch?v=ZhTKxcTBZNE)
 
 ## How to cite:
 Comming soon, Magic is being used at the ISWC2021 Tabular Data to Knowledge Graph Matching" competition.<br>
